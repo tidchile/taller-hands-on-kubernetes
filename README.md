@@ -325,8 +325,185 @@ Ya. Creemos el namespace
 
 curl -XPOST -d'{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"kube-system"}}' "http://127.0.0.1:8080/api/v1/namespaces"
 
+## Workers
+
+### TLS
+
+Movamos para cada maquina los archivos
+
+scp -i ~/.vagrant.d/insecure_private_key secrets/{ca,worker,worker-key}.pem core@172.17.8.103:.
+scp -i ~/.vagrant.d/insecure_private_key secrets/{ca,worker,worker-key}.pem core@172.17.8.104:.
+
+Y dentro de cada maquina
+
+sudo mkdir -p /etc/kubernetes/ssl
+sudo mv {ca,worker,worker-key}.pem /etc/kubernetes/ssl/.
+sudo chmod 600 /etc/kubernetes/ssl/*-key.pem
+sudo chown root:root /etc/kubernetes/ssl/*-key.pem
 
 
+### Flannel
+
+sudo mkdir /etc/flannel
+sudo vim /etc/flannel/options.env
+
+FLANNELD_IFACE=172.17.8.103
+FLANNELD_ETCD_ENDPOINTS=http://172.17.8.101:2379
+
+sudo mkdir /etc/systemd/system/flanneld.service.d
+sudo vim /etc/systemd/system/flanneld.service.d/40-ExecStartPre-symlink.conf
+
+[Service]
+ExecStartPre=/usr/bin/ln -sf /etc/flannel/options.env /run/flannel/options.env
+
+### Docker
+
+sudo mkdir /etc/systemd/system/docker.service.d
+sudo vim /etc/systemd/system/docker.service.d/40-flannel.conf
+
+[Unit]
+Requires=flanneld.service
+After=flanneld.service
 
 
+### Kubelet
 
+udo mkdir -p /opt/bin
+sudo curl -sSL -o /opt/bin/kubelet https://storage.googleapis.com/kubernetes-release/release/v1.1.8/bin/linux/amd64/kubelet
+sudo chmod +x /opt/bin/kubelet
+sudo mkdir /etc/kubernetes/manifests sudo mkdir -p /srv/kubernetes/manifests
+
+
+sudo vim /etc/systemd/system/kubelet.service
+
+[Service]
+ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
+
+ExecStart=/opt/bin/kubelet \
+  --api_servers=https://172.17.8.102 \
+  --register-node=true \
+  --allow-privileged=true \
+  --config=/etc/kubernetes/manifests \
+  --hostname-override=172.17.8.103 \
+  --cluster-dns=10.3.0.10 \
+  --cluster-domain=cluster.local \
+  --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml \
+  --tls-cert-file=/etc/kubernetes/ssl/worker.pem \
+  --tls-private-key-file=/etc/kubernetes/ssl/worker-key.pem
+Restart=always
+RestartSec=10
+[Install]
+WantedBy=multi-user.target
+
+sudo vim /etc/kubernetes/manifests/kube-proxy.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-proxy
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  containers:
+  - name: kube-proxy
+    image: quay.io/coreos/hyperkube:v1.1.8_coreos.0
+    command:
+    - /hyperkube
+    - proxy
+    - --master=https://172.17.8.102
+    - --kubeconfig=/etc/kubernetes/worker-kubeconfig.yaml
+    - --proxy-mode=iptables
+    securityContext:
+      privileged: true
+    volumeMounts:
+      - mountPath: /etc/ssl/certs
+        name: "ssl-certs"
+      - mountPath: /etc/kubernetes/worker-kubeconfig.yaml
+        name: "kubeconfig"
+        readOnly: true
+      - mountPath: /etc/kubernetes/ssl
+        name: "etc-kube-ssl"
+        readOnly: true
+  volumes:
+    - name: "ssl-certs"
+      hostPath:
+        path: "/usr/share/ca-certificates"
+    - name: "kubeconfig"
+      hostPath:
+        path: "/etc/kubernetes/worker-kubeconfig.yaml"
+    - name: "etc-kube-ssl"
+      hostPath:
+        path: "/etc/kubernetes/ssl"
+
+/etc/kubernetes/worker-kubeconfig.yaml
+
+apiVersion: v1
+kind: Config
+clusters:
+- name: local
+  cluster:
+    certificate-authority: /etc/kubernetes/ssl/ca.pem
+users:
+- name: kubelet
+  user:
+    client-certificate: /etc/kubernetes/ssl/worker.pem
+    client-key: /etc/kubernetes/ssl/worker-key.pem
+contexts:
+- context:
+    cluster: local
+    user: kubelet
+  name: kubelet-context
+current-context: kubelet-context
+
+
+### Start Services
+
+sudo systemctl daemon-reload
+
+sudo systemctl start kubelet
+
+sudo systemctl enable kubelet
+
+sytemctl status kubelet
+
+## Kubectl (manejemos la cosa)
+
+curl -O https://storage.googleapis.com/kubernetes-release/release/v1.1.8/bin/darwin/amd64/kubectl
+
+chmod +x kubectl
+mv kubectl /usr/local/bin/kubectl
+
+kubectl config set-cluster default-cluster --server=https://${MASTER_HOST} --certificate-authority=${CA_CERT}
+kubectl config set-credentials default-admin --certificate-authority=${CA_CERT} --client-key=${ADMIN_KEY} --client-certificate=${ADMIN_CERT}
+kubectl config set-context default-system --cluster=default-cluster --user=default-admin
+kubectl config use-context default-system
+
+Por ejemplo yo hice:
+
+kubectl config set-cluster default-cluster --server=https://172.17.8.102 --certificate-authority=ca.pem
+kubectl config set-credentials default-admin --certificate-authority=ca.pem --client-key=admin-key.pem --client-certificate=admin.pem
+kubectl config set-context default-system --cluster=default-cluster --user=default-admin
+kubectl config use-context default-system
+
+YMMV of course
+
+### Veamos si funcionó
+
+kubectl get nodes
+kubectl get po --namespace=kube-system
+
+## DNS Addon
+
+De aquí en adelante, no deberíamos meternos más (en teoría a los servidores), o sea, jovenes, `kubectl` es tu amigo
+
+```
+    kubectl create -f dns-addon.yml
+
+    kubectl get pods --name-space=kube-system | grep kube-dns-v9
+```
+
+Para seguir, veamos este ejemplo https://github.com/hermanjunge/k8s-examples
+
+Muchas Gracias.
+
+HJ.-
