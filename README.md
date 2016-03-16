@@ -397,21 +397,26 @@ ExecStartPre=/usr/bin/ln -sf /etc/flannel/options.env /run/flannel/options.env
 sudo mkdir /etc/systemd/system/docker.service.d
 sudo vim /etc/systemd/system/docker.service.d/40-flannel.conf
 
+```
 [Unit]
 Requires=flanneld.service
 After=flanneld.service
-
+```
 
 ### Kubelet
 
-udo mkdir -p /opt/bin
-sudo curl -sSL -o /opt/bin/kubelet https://storage.googleapis.com/kubernetes-release/release/v1.1.8/bin/linux/amd64/kubelet
-sudo chmod +x /opt/bin/kubelet
-sudo mkdir /etc/kubernetes/manifests sudo mkdir -p /srv/kubernetes/manifests
+```
+    sudo mkdir -p /opt/bin
+    sudo curl -sSL -o /opt/bin/kubelet https://storage.googleapis.com/kubernetes-release/release/v1.1.8/bin/linux/amd64/kubelet
+    sudo chmod +x /opt/bin/kubelet
+    sudo mkdir /etc/kubernetes/manifests sudo mkdir -p /srv/kubernetes/manifests
+```
 
+```
+    sudo vim /etc/systemd/system/kubelet.service
+```
 
-sudo vim /etc/systemd/system/kubelet.service
-
+```
 [Service]
 ExecStartPre=/usr/bin/mkdir -p /etc/kubernetes/manifests
 
@@ -430,9 +435,13 @@ Restart=always
 RestartSec=10
 [Install]
 WantedBy=multi-user.target
+```
 
-sudo vim /etc/kubernetes/manifests/kube-proxy.yaml
+```
+    sudo vim /etc/kubernetes/manifests/kube-proxy.yaml
+```
 
+```
 apiVersion: v1
 kind: Pod
 metadata:
@@ -471,8 +480,13 @@ spec:
       hostPath:
         path: "/etc/kubernetes/ssl"
 
-/etc/kubernetes/worker-kubeconfig.yaml
+```
 
+```
+sudo vim /etc/kubernetes/worker-kubeconfig.yaml
+```
+
+```
 apiVersion: v1
 kind: Config
 clusters:
@@ -490,43 +504,51 @@ contexts:
     user: kubelet
   name: kubelet-context
 current-context: kubelet-context
-
+```
 
 ### Start Services
 
-sudo systemctl daemon-reload
-
-sudo systemctl start kubelet
-
-sudo systemctl enable kubelet
-
-sytemctl status kubelet
+```
+    sudo systemctl daemon-reload
+    sudo systemctl start kubelet
+    sudo systemctl enable kubelet
+    sytemctl status kubelet
+```
 
 ## Kubectl (manejemos la cosa)
 
-curl -O https://storage.googleapis.com/kubernetes-release/release/v1.1.8/bin/darwin/amd64/kubectl
+kubectl es la magia acá. Te hace "sentir" que no manejas un cluster, sino que te estás entendiendo
+con un servidor.
 
-chmod +x kubectl
-mv kubectl /usr/local/bin/kubectl
+```
+    curl -O https://storage.googleapis.com/kubernetes-release/release/v1.1.8/bin/darwin/amd64/kubectl
 
-kubectl config set-cluster default-cluster --server=https://${MASTER_HOST} --certificate-authority=${CA_CERT}
-kubectl config set-credentials default-admin --certificate-authority=${CA_CERT} --client-key=${ADMIN_KEY} --client-certificate=${ADMIN_CERT}
-kubectl config set-context default-system --cluster=default-cluster --user=default-admin
-kubectl config use-context default-system
+    chmod +x kubectl
+    mv kubectl /usr/local/bin/kubectl
+
+    kubectl config set-cluster default-cluster --server=https://${MASTER_HOST} --certificate-authority=${CA_CERT}
+    kubectl config set-credentials default-admin --certificate-authority=${CA_CERT} --client-key=${ADMIN_KEY} --client-certificate=${ADMIN_CERT}
+    kubectl config set-context default-system --cluster=default-cluster --user=default-admin
+    kubectl config use-context default-system
+```
 
 Por ejemplo yo hice:
 
-kubectl config set-cluster default-cluster --server=https://172.17.8.102 --certificate-authority=ca.pem
-kubectl config set-credentials default-admin --certificate-authority=ca.pem --client-key=admin-key.pem --client-certificate=admin.pem
-kubectl config set-context default-system --cluster=default-cluster --user=default-admin
-kubectl config use-context default-system
+```
+    kubectl config set-cluster default-cluster --server=https://172.17.8.102 --certificate-authority=ca.pem
+    kubectl config set-credentials default-admin --certificate-authority=ca.pem --client-key=admin-key.pem --client-certificate=admin.pem
+    kubectl config set-context default-system --cluster=default-cluster --user=default-admin
+    kubectl config use-context default-system
+```
 
 YMMV of course
 
-### Veamos si funcionó
+### Veamos si funcionó!
 
-kubectl get nodes
-kubectl get po --namespace=kube-system
+```
+    kubectl get nodes
+    kubectl get po --namespace=kube-system
+```
 
 ## DNS Addon
 
