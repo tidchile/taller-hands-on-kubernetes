@@ -425,22 +425,32 @@ Y dentro de cada maquina
 
 ### Flannel
 
-sudo mkdir /etc/flannel
-sudo vim /etc/flannel/options.env
+```
+    sudo mkdir /etc/flannel
+    sudo vim /etc/flannel/options.env
+```
 
+```
 FLANNELD_IFACE=172.17.8.103
 FLANNELD_ETCD_ENDPOINTS=http://172.17.8.101:2379
+```
 
-sudo mkdir /etc/systemd/system/flanneld.service.d
-sudo vim /etc/systemd/system/flanneld.service.d/40-ExecStartPre-symlink.conf
+```
+    sudo mkdir /etc/systemd/system/flanneld.service.d
+    sudo vim /etc/systemd/system/flanneld.service.d/40-ExecStartPre-symlink.conf
+```
 
+```
 [Service]
 ExecStartPre=/usr/bin/ln -sf /etc/flannel/options.env /run/flannel/options.env
+```
 
 ### Docker
 
-sudo mkdir /etc/systemd/system/docker.service.d
-sudo vim /etc/systemd/system/docker.service.d/40-flannel.conf
+```
+    sudo mkdir /etc/systemd/system/docker.service.d
+    sudo vim /etc/systemd/system/docker.service.d/40-flannel.conf
+```
 
 ```
 [Unit]
