@@ -27,8 +27,6 @@ Entramos a la primera maquina. Esta es la que designaremos para correr kubernete
 ```
     vagrant ssh core-01
     ifconfig # Nos entregaría la "IP Pública de la maquina, en este ejemplo será 172.17.8.101"
-    # luego debes salir de la máquina core-01
-    exit
 ```
 
 Creamos el drop-in
