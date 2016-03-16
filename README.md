@@ -569,7 +569,7 @@ current-context: kubelet-context
     sudo systemctl daemon-reload
     sudo systemctl start kubelet
     sudo systemctl enable kubelet
-    sytemctl status kubelet
+    systemctl status kubelet
 ```
 
 ## Kubectl (manejemos la cosa)
