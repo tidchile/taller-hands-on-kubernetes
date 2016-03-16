@@ -67,7 +67,7 @@ Usemos el script de este mismo repositorio. Supongamos que la IP de master es
 `172.17.8.102`, haremos
 
 ```
-	./hack/generate-tls-assets.sh 172.17.8.102
+    ./hack/generate-tls-assets.sh 172.17.8.102
 ```
 
 ## Master
@@ -91,37 +91,50 @@ Y dentro de la maquina...
 
 ### Flannel
 
-sudo mkdir /etc/flannel
-sudo vim /etc/flannel/options.env
+```
+    sudo mkdir /etc/flannel
+    sudo vim /etc/flannel/options.env
+```
 
+Dentro del editor
+
+```
 FLANNELD_IFACE=172.17.8.102
 FLANNELD_ETCD_ENDPOINTS=http://172.17.8.101:2379
+```
 
-
-sudo mkdir /etc/systemd/system/flanneld.service.d
-sudo vim /etc/systemd/system/flanneld.service.d/40-ExecStartPre-symlink.conf
+```
+    sudo mkdir /etc/systemd/system/flanneld.service.d
+    sudo vim /etc/systemd/system/flanneld.service.d/40-ExecStartPre-symlink.conf
+```
 
 ### Docker
 
-sudo mkdir /etc/systemd/system/docker.service.d
-sudo vim /etc/systemd/system/docker.service.d/40-flannel.conf
+```
+    sudo mkdir /etc/systemd/system/docker.service.d
+    sudo vim /etc/systemd/system/docker.service.d/40-flannel.conf
+```
 
+```
 [Unit]
 Requires=flanneld.service
 After=flanneld.service
+```
 
 ### Kubernetes Services
 
-sudo curl -sSL -o /opt/bin/kubelet https://storage.googleapis.com/kubernetes-release/release/v1.1.8/bin/linux/amd64/kubelet
-sudo chmod +x /opt/bin/kubelet
+```
+    sudo curl -sSL -o /opt/bin/kubelet https://storage.googleapis.com/kubernetes-release/release/v1.1.8/bin/linux/amd64/kubelet
+    sudo chmod +x /opt/bin/kubelet
+    sudo mkdir /etc/kubernetes/manifests
+    sudo mkdir -p /srv/kubernetes/manifests
+```
 
+```
+    sudo vim /etc/systemd/system/kubelet.service
+```
 
-sudo mkdir /etc/kubernetes/manifests
-sudo mkdir -p /srv/kubernetes/manifests
-
-
-/etc/systemd/system/kubelet.service
-
+```
 [Service]
 ExecStart=/opt/bin/kubelet \
   --api_servers=http://127.0.0.1:8080 \
@@ -135,10 +148,13 @@ Restart=always
 RestartSec=10
 [Install]
 WantedBy=multi-user.target
+```
 
+```
+    sudo vim /etc/kubernetes/manifests/kube-apiserver.yaml
+```
 
-/etc/kubernetes/manifests/kube-apiserver.yaml
-
+```
 apiVersion: v1
 kind: Pod
 metadata:
@@ -184,9 +200,13 @@ spec:
   - hostPath:
       path: /usr/share/ca-certificates
     name: ssl-certs-host
+```
 
-/etc/kubernetes/manifests/kube-proxy.yaml
+```
+    sudo vim /etc/kubernetes/manifests/kube-proxy.yaml
+```
 
+```
 apiVersion: v1
 kind: Pod
 metadata:
@@ -212,9 +232,13 @@ spec:
   - hostPath:
       path: /usr/share/ca-certificates
     name: ssl-certs-host
+```
 
-/etc/kubernetes/manifests/kube-podmaster.yaml
+```
+    sudo vim /etc/kubernetes/manifests/kube-podmaster.yaml
+```
 
+```
 apiVersion: v1
 kind: Pod
 metadata:
@@ -261,9 +285,13 @@ spec:
   - hostPath:
       path: /etc/kubernetes/manifests
     name: manifest-dst
+```
 
-/srv/kubernetes/manifests/kube-controller-manager.yaml
+```
+    sudo vim /srv/kubernetes/manifests/kube-controller-manager.yaml
+```
 
+```
 apiVersion: v1
 kind: Pod
 metadata:
@@ -301,10 +329,13 @@ spec:
   - hostPath:
       path: /usr/share/ca-certificates
     name: ssl-certs-host
+```
 
+```
+    sudo vim /srv/kubernetes/manifests/kube-scheduler.yaml
+```
 
-/srv/kubernetes/manifests/kube-scheduler.yaml
-
+```
 apiVersion: v1
 kind: Pod
 metadata:
@@ -326,29 +357,37 @@ spec:
         port: 10251
       initialDelaySeconds: 15
       timeoutSeconds: 1
+```
 
 OK. Echemos a andar master!
 
+```
 sudo systemctl daemon-reload
 
 curl -X PUT -d "value={\"Network\":\"10.2.0.0/16\",\"Backend\":{\"Type\":\"vxlan\"}}" "http://172.17.8.101:2379/v2/keys/coreos.com/network/config"
 
 sudo systemctl start kubelet
 sudo systemctl enable kubelet
+```
 
 Comprobemos si anda
 
-systemctl status kubelet
-docker ps -a
+```
+    systemctl status kubelet
+    docker ps -a
+```
 
-Debería mostrarte algunos containers que ya estan siendo bajados
+Debería mostrarnos algunos containers que ya estan siendo bajados
 
 Para terminar con master, creemos el namespace de kube-system. Este es útil para un número de razones
 
 Primero veamos si anda la API de kubernetes
 
-curl http://127.0.0.1:8080/version
+```
+    curl http://127.0.0.1:8080/version
+```
 
+```
 {
   "major": "1",
   "minor": "1",
@@ -356,10 +395,13 @@ curl http://127.0.0.1:8080/version
   "gitCommit": "197bd0e32d7f81ae3cac410a959a957f88e48419",
   "gitTreeState": "clean"
 }
+```
 
 Ya. Creemos el namespace
 
-curl -XPOST -d'{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"kube-system"}}' "http://127.0.0.1:8080/api/v1/namespaces"
+```
+    curl -XPOST -d'{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"kube-system"}}' "http://127.0.0.1:8080/api/v1/namespaces"
+```
 
 ## Workers
 
@@ -367,16 +409,19 @@ curl -XPOST -d'{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"kube-sy
 
 Movamos para cada maquina los archivos
 
-scp -i ~/.vagrant.d/insecure_private_key secrets/{ca,worker,worker-key}.pem core@172.17.8.103:.
-scp -i ~/.vagrant.d/insecure_private_key secrets/{ca,worker,worker-key}.pem core@172.17.8.104:.
+```
+    scp -i ~/.vagrant.d/insecure_private_key secrets/{ca,worker,worker-key}.pem core@172.17.8.103:.
+    scp -i ~/.vagrant.d/insecure_private_key secrets/{ca,worker,worker-key}.pem core@172.17.8.104:.
+```
 
 Y dentro de cada maquina
 
-sudo mkdir -p /etc/kubernetes/ssl
-sudo mv {ca,worker,worker-key}.pem /etc/kubernetes/ssl/.
-sudo chmod 600 /etc/kubernetes/ssl/*-key.pem
-sudo chown root:root /etc/kubernetes/ssl/*-key.pem
-
+```
+    sudo mkdir -p /etc/kubernetes/ssl
+    sudo mv {ca,worker,worker-key}.pem /etc/kubernetes/ssl/.
+    sudo chmod 600 /etc/kubernetes/ssl/*-key.pem
+    sudo chown root:root /etc/kubernetes/ssl/*-key.pem
+```
 
 ### Flannel
 
