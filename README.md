@@ -31,8 +31,12 @@ Entramos a la primera maquina. Esta es la que designaremos para correr kubernete
 
 Creamos el drop-in
 
-* sudo mkdir -p /etc/systemd/system/etcd2.service.d
-* sudo vim /etc/systemd/system/etcd2.service.d/40-listen-address.conf
+```
+    sudo mkdir -p /etc/systemd/system/etcd2.service.d
+    sudo vim /etc/systemd/system/etcd2.service.d/40-listen-address.conf
+```
+
+Dentro del editor:
 
 ```
 [Service]
