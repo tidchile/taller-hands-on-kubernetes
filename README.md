@@ -44,10 +44,19 @@ Environment=ETCD_LISTEN_CLIENT_URLS=http://0.0.0.0:2379
 Environment=ETCD_ADVERTISE_CLIENT_URLS=http://172.17.8.101:2379
 ```
 
-* sudo systemctl start etcd2
-* sudo systemctl enable etcd2
-* systemctl status etcd2
-* curl http://172.17.8.101:2379/v2/keys
+Levantemos el servicio, dejemoslo amarrado al startup y revisemoslo
+
+```
+    sudo systemctl start etcd2
+    sudo systemctl enable etcd2
+    systemctl status etcd2
+```
+
+Para comprobar si funciona de afuera
+
+```
+    curl http://172.17.8.101:2379/v2/keys
+```
 
 ## Generemos los elementos TLS
 
