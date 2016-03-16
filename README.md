@@ -129,6 +129,7 @@ After=flanneld.service
 ### Kubernetes Services
 
 ```
+    sudo mkdir -p /opt/bin
     sudo curl -sSL -o /opt/bin/kubelet https://storage.googleapis.com/kubernetes-release/release/v1.1.8/bin/linux/amd64/kubelet
     sudo chmod +x /opt/bin/kubelet
     sudo mkdir /etc/kubernetes/manifests
