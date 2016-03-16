@@ -57,6 +57,7 @@ Para comprobar si funciona de afuera
 ```
     curl http://172.17.8.101:2379/v2/keys
 ```
+Recuerden salir de la máquina core-01 para seguir ejecutando las siguientes sentencias.
 
 ## Generemos los elementos TLS
 
