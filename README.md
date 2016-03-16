@@ -80,7 +80,7 @@ Movamos los siguientes archivos a la maquina master
     scp -i ~/.vagrant.d/insecure_private_key secrets/{ca,apiserver,apiserver-key}.pem core@172.17.8.102:.
 ```
 
-Y dentro de la maquina...
+Y dentro de la maquina master
 
 ```
     sudo mkdir -p /etc/kubernetes/ssl
