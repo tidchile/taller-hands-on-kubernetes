@@ -383,7 +383,7 @@ Comprobemos si anda
     docker ps -a
 ```
 
-Antes de salir a crear el namespace `kube-system`, veamos si anda la API de kubernetes:
+Antes de crear el namespace `kube-system`, veamos si anda la API de kubernetes:
 
 ```
     curl http://127.0.0.1:8080/version
@@ -399,7 +399,7 @@ Antes de salir a crear el namespace `kube-system`, veamos si anda la API de kube
 }
 ```
 
-Ya. Salgamos del servidor y creemos el namespace
+Ya. Creemos el namespace
 
 ```
     curl -XPOST -d'{"apiVersion":"v1","kind":"Namespace","metadata":{"name":"kube-system"}}' "http://127.0.0.1:8080/api/v1/namespaces"
