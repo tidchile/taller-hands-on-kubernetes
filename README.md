@@ -1,14 +1,36 @@
 # taller-hands-on-kubernetes
+
 Taller para instalar kubernetes (paso a paso, the hard way) en un cluster de coreOS en tu Laptop.
 
+## Preliminares
 
-* Clone el repo
-* cd
-* vagrant up
-* vagrant status
-* vagrant ssh core-01
-* ifconfig
-* 172.17.8.101 - esta es la "ip publica"
+Lo primero es clonar este repositorio, y levantar las maquinas
+
+```
+    git clone https://github.com/tidchile/taller-hands-on-kubernetes
+    cd taller-hands-on-kubernetes
+    vagrant up
+    vagrant status
+```
+
+Las maquinas están arriba!
+
+Una muy buena aclaración es que porque estemos usando Vagrant, no significa que
+necesitemos Vagrant para kubernetes: Simplemente es una forma cómoda de levantar
+un número de maquinas virtuales en tu laptop. El escenario ideal es tener los
+servidores remotos. Que es donde debería correr la solución de kubernetes.
+
+## ETCD Server
+
+Entramos a la primera maquina. Esta es la que designaremos para correr kubernetes.
+
+```
+    vagrant ssh core-01
+    ifconfig # Nos entregaría la "IP Pública de la maquina, en este ejemplo será 172.17.8.101"
+```
+
+Creamos el drop-in
+
 * sudo mkdir -p /etc/systemd/system/etcd2.service.d
 * sudo vim /etc/systemd/system/etcd2.service.d/40-listen-address.conf
 
