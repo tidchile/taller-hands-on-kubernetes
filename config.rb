@@ -17,7 +17,7 @@ $instance_name_prefix="core"
 $image_version = "current"
 
 # Official CoreOS channel from which updates should be downloaded
-$update_channel='alpha'
+$update_channel='stable'
 
 # Customize VMs
 $vm_memory = 512
