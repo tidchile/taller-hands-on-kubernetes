@@ -503,29 +503,39 @@ sytemctl status kubelet
 
 ## Kubectl (manejemos la cosa)
 
-curl -O https://storage.googleapis.com/kubernetes-release/release/v1.1.8/bin/darwin/amd64/kubectl
+kubectl es la magia acá. Te hace "sentir" que no manejas un cluster, sino que te estás entendiendo
+con un servidor.
 
-chmod +x kubectl
-mv kubectl /usr/local/bin/kubectl
+```
+    curl -O https://storage.googleapis.com/kubernetes-release/release/v1.1.8/bin/darwin/amd64/kubectl
 
-kubectl config set-cluster default-cluster --server=https://${MASTER_HOST} --certificate-authority=${CA_CERT}
-kubectl config set-credentials default-admin --certificate-authority=${CA_CERT} --client-key=${ADMIN_KEY} --client-certificate=${ADMIN_CERT}
-kubectl config set-context default-system --cluster=default-cluster --user=default-admin
-kubectl config use-context default-system
+    chmod +x kubectl
+    mv kubectl /usr/local/bin/kubectl
+
+
+    kubectl config set-cluster default-cluster --server=https://${MASTER_HOST} --certificate-authority=${CA_CERT}
+    kubectl config set-credentials default-admin --certificate-authority=${CA_CERT} --client-key=${ADMIN_KEY} --client-certificate=${ADMIN_CERT}
+    kubectl config set-context default-system --cluster=default-cluster --user=default-admin
+    kubectl config use-context default-system
+```
 
 Por ejemplo yo hice:
 
-kubectl config set-cluster default-cluster --server=https://172.17.8.102 --certificate-authority=ca.pem
-kubectl config set-credentials default-admin --certificate-authority=ca.pem --client-key=admin-key.pem --client-certificate=admin.pem
-kubectl config set-context default-system --cluster=default-cluster --user=default-admin
-kubectl config use-context default-system
+```
+    kubectl config set-cluster default-cluster --server=https://172.17.8.102 --certificate-authority=ca.pem
+    kubectl config set-credentials default-admin --certificate-authority=ca.pem --client-key=admin-key.pem --client-certificate=admin.pem
+    kubectl config set-context default-system --cluster=default-cluster --user=default-admin
+    kubectl config use-context default-system
+```
 
 YMMV of course
 
-### Veamos si funcionó
+### Veamos si funcionó!
 
-kubectl get nodes
-kubectl get po --namespace=kube-system
+```
+    kubectl get nodes
+    kubectl get po --namespace=kube-system
+```
 
 ## DNS Addon
 
