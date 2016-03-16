@@ -108,6 +108,11 @@ FLANNELD_ETCD_ENDPOINTS=http://172.17.8.101:2379
     sudo vim /etc/systemd/system/flanneld.service.d/40-ExecStartPre-symlink.conf
 ```
 
+```
+[Service]
+ExecStartPre=/usr/bin/ln -sf /etc/flannel/options.env /run/flannel/options.env
+```
+
 ### Docker
 
 ```
