@@ -387,7 +387,7 @@ Debería mostrarnos algunos containers que ya estan siendo bajados
 
 Para terminar con master, creemos el namespace de kube-system. Este es útil para un número de razones
 
-Primero veamos si anda la API de kubernetes
+Primero veamos si anda la API de kubernetes, saliendo del servidor:
 
 ```
     curl http://127.0.0.1:8080/version
